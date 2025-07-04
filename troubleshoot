@@ -1,0 +1,228 @@
+incase nodemon server fails due to port issue which is in use, run :
+--------------------------------->sudo lsof -i :<port_number>
+--------------------------------->kill -9 <pid>
+
+Incase images doesnt load, these are your cloudinary credentials
+CLOUDINARY_CLOUD_NAME="dqdnyqban"
+CLOUDINARY_API_KEY="363622188987961"
+CLOUDINARY_API_SECRET="Kwg5z3HvJVQosOC8aKIPKUv-F-o"
+
+download python3
+
+do: pip install pandas numpy tensorflow scikit-learn
+
+change and edit the following: - edit and change the category field to have the following: men,women,kids, footwear. - edit the brand field to accept the following brands: nike,adidas,african,levi's, zara, accessories and also allow the admin to select multiple brands all separated. -The price field will remain unchanged -The total stock field will remain unchanged
+
+
+
+/* import Address from "@/components/shopping-view/address";
+import img from "../../assets/account.jpg";
+import { useDispatch, useSelector } from "react-redux";
+import UserCartItemsContent from "@/components/shopping-view/cart-items-content";
+import { Button } from "@/components/ui/button";
+import { useState } from "react";
+import { createNewOrder } from "@/store/shop/order-slice";
+import { Navigate } from "react-router-dom";
+import { useToast } from "@/components/ui/use-toast";
+import { formatFCFA } from "@/lib/utils";
+/* import { getFCFAToUSD } from "../../../../server/helpers/exchangerate"; */
+
+function ShoppingCheckout() {
+  const { cartItems } = useSelector((state) => state.shopCart);
+  const { user } = useSelector((state) => state.auth);
+  const { approvalURL } = useSelector((state) => state.shopOrder);
+  const [currentSelectedAddress, setCurrentSelectedAddress] = useState(null);
+  const [isPaymentStart, setIsPaymemntStart] = useState(false);
+  /* const [paymentMethod, setPaymentMethod] = useState(null);
+  const [isProcessing, setIsProcessing] = useState(false); */
+  const dispatch = useDispatch();
+  const { toast } = useToast();
+
+  console.log(currentSelectedAddress, "cartItems");
+
+  const totalCartAmount =
+    cartItems && cartItems.items && cartItems.items.length > 0
+      ? cartItems.items.reduce(
+          (sum, currentItem) =>
+            sum +
+            (currentItem?.salePrice > 0
+              ? currentItem?.salePrice
+              : currentItem?.price) *
+              currentItem?.quantity,
+          0
+        )
+      : 0;
+
+  function handleInitiatePaypalPayment() {
+    if (cartItems.length === 0) {
+      toast({
+        title: "Your cart is empty. Please add items to proceed",
+        variant: "destructive",
+      });
+
+      return;
+    }
+    if (currentSelectedAddress === null) {
+      toast({
+        title: "Please select one address to proceed.",
+        variant: "destructive",
+      });
+
+      return;
+    }
+
+    const orderData = {
+      userId: user?.id,
+      cartId: cartItems?._id,
+      cartItems: cartItems.items.map((singleCartItem) => ({
+        productId: singleCartItem?.productId,
+        title: singleCartItem?.title,
+        image: singleCartItem?.image,
+        price:
+          singleCartItem?.salePrice > 0
+            ? singleCartItem?.salePrice
+            : singleCartItem?.price,
+        quantity: singleCartItem?.quantity,
+      })),
+      addressInfo: {
+        addressId: currentSelectedAddress?._id,
+        address: currentSelectedAddress?.address,
+        city: currentSelectedAddress?.city,
+        pincode: currentSelectedAddress?.pincode,
+        phone: currentSelectedAddress?.phone,
+        notes: currentSelectedAddress?.notes,
+      },
+      orderStatus: "pending",
+      paymentMethod: "paypal",
+      paymentStatus: "pending",
+      totalAmount: totalCartAmount,
+      orderDate: new Date(),
+      orderUpdateDate: new Date(),
+      paymentId: "",
+      payerId: "",
+    };
+
+    dispatch(createNewOrder(orderData)).then((data) => {
+      console.log(data, "Francis");
+      if (data?.payload?.success) {
+        setIsPaymemntStart(true);
+      } else {
+        setIsPaymemntStart(false);
+      }
+    });
+  }
+
+  if (approvalURL) {
+    window.location.href = approvalURL;
+  }
+
+  return (
+    <div className="flex flex-col">
+      <div className="relative h-[300px] w-full overflow-hidden">
+        <img src={img} className="h-full w-full object-cover object-center" />
+      </div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 mt-5 p-5">
+        <Address
+          selectedId={currentSelectedAddress}
+          setCurrentSelectedAddress={setCurrentSelectedAddress}
+        />
+        <div className="flex flex-col gap-4">
+          {cartItems && cartItems.items && cartItems.items.length > 0
+            ? cartItems.items.map((item) => (
+                <UserCartItemsContent cartItem={item} />
+              ))
+            : null}
+          <div className="mt-8 space-y-4">
+            <div className="flex justify-between">
+              <span className="font-bold">Total</span>
+              <span className="font-bold">{formatFCFA(totalCartAmount)}</span>
+            </div>
+          </div>
+          <div className="mt-4 w-full flex flex-col gap-[10px]">
+            <Button onClick={handleInitiatePaypalPayment} className="w-full">
+              {isPaymentStart
+                ? "Processing Paypal Payment..."
+                : "Checkout with Paypal"}
+            </Button>
+            <Button onClick={handleInitiatePaypalPayment} className="w-full">
+              {isPaymentStart
+                ? "Processing Mobile Money Payment..."
+                : "Checkout with Mobile Money"}
+            </Button>
+            <Button onClick={handleInitiatePaypalPayment} className="w-full">
+              {isPaymentStart
+                ? "Processing Orange Money Payment..."
+                : "Checkout with  Orange Money"}
+            </Button>
+          </div>
+          {/* <div className="mt-4">
+            <label htmlFor="payment-select" className="font-semibold">
+              Choose Payment:
+            </label>
+            <select
+              id="payment-select"
+              value={paymentMethod || ""}
+              onChange={(e) => setPaymentMethod(e.target.value)}
+              className="block w-full p-2 border rounded">
+              <option value="">-- Select --</option>
+              <option value="paypal">PayPal</option>
+              <option value="mobileMoney">Mobile Money</option>
+              <option value="orangeMoney">Orange Money</option>
+            </select>
+          </div>
+
+          {paymentMethod === "paypal" && (
+            <div className="mt-2">
+              <span>
+                Amount in USD: $ {(totalCartAmount / getFCFAToUSD).toFixed(2)}
+              </span>
+            </div>
+          )}
+
+          <div className="mt-4 w-full">
+            <Button
+              disabled={!paymentMethod}
+              onClick={() => handleCheckout(paymentMethod)}
+              className="w-full">
+              {isProcessing
+                ? `Processing ${
+                    paymentMethod === "paypal"
+                      ? "PayPal"
+                      : paymentMethod === "mobileMoney"
+                      ? "Mobile Money"
+                      : "Orange Money"
+                  } Payment...`
+                : "Checkout"}
+            </Button>
+          </div> */}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export default ShoppingCheckout; 
+
+
+
+"access_token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJSMjU2In0.eyJjbGllbnRJZCI6Ijg0YjY4OWUwLTAxZTEtNDQ2NC05NjQ3LTAxNTY1YWFmZjdmZCIsImV4cGlyZXMiOiIyMDI1LTA2LTA5VDExOjI3OjEyLjg5NiIsInNlc3Npb25JZCI6ImZiZGZiMTQ1LTdlY2MtNDNiNy1hMzI4LWEzZDEwOGU1NDY3OCJ9.f6varQEh2vy278tc3X3eDVjCESeaYckV6p58_WEea3rlwYnR8allAbQCmHhUOYn6_LHR-u0As1f87XILisQ44k1PYpwe9KtaLBAKeY20R3lcBSALqfSXrxslt1CwqKPZR1UO3pI2M0r3LRFnL1M0N8HD_EWRmqJ3d7fKmG2sz-aOJkO8ZVd1zE3jYv5Hn9q3pRHQQd67VQsQRAiYIQEDzWsPg_W2oa5X9aoqDOovwIQjlNeanJ195cbQXyQKgGppRY6kmT_uu6mMTP-yidkLUUB8VedEc46c0PHgFWJQme58qlIA4BybQG1beHmXljJm37t02-wN76HDwtmBQpS6qQ",
+    "token_type": "access_token",
+    "expires_in": 3600
+}
+ok so the files i sent to you was for an Ecommerce platform which was implemented with MERN stack. 
+I want you to implement a very robust, efficient and powerful fraud detection system using tensorflow which will be exposed with fastapi and should be able to 
+generate transaction results at realtime (so a realtime fraud detection system) using machine learning. I also want you to implement an explainableAI feature using shap
+ which will explain to me why a transaction was flagged as fraudulent or not fraudulent(legitimate). I want to implement it for a cameroon ecommerce platform 
+ which uses paypal, orange money and MTN mobile money as the payment systems. i wanted you to design a very wide dataset of features which i will use for the 
+ fraud detection model and train it using the most suitable technique for this web application. Also, i want the model to be at least 99.7% or 100%(a perfect model)
+accurate in order to give very accurate and excellent predictions  whenever the customer initiates a checkout (clicks on checkout) using any of the payment 
+systems(paypal, orange moeny and MTN mobile money) so that the model prevents the request from  going through if it is fraudulent or accepts it if it is legitimate.
+
+          <Route path="paypal-return" element={<PaypalReturnPage />} />
+import PaypalReturnPage from "./pages/shopping-view/paypal-return";
+
+
+"start": "server.js",
+
+
+
