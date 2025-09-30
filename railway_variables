@@ -1,0 +1,12 @@
+PAYPAL_MODE
+sandbox
+CAMPAY_WEBHOOK_URL
+https://fypserver.up.railway.app/api/shop/order/campay-webhook
+PORT
+5000
+PAYPAL_CLIENT_SECRET
+EFdCoqpcbou3MIOmNb7cYdDV59e9QmYPRNvtV6_pWhQAkcRidHQvM5MqsQ-wUM7t9u2lfHRbK_N3o1Uo
+CLIENT_URL
+https://final-yp.netlify.app
+PAYPAL_CLIENT_ID
+ATQWiJ6L_dpovsg86e1OJTuZoZwAYOt9ArTaupbys4NAkALMsPHk5N6tTkQVactXANaiszSPyMB7T7PE
